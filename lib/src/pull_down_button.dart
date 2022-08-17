@@ -16,7 +16,11 @@ enum PullDownMenuPosition {
   under,
 
   /// Menu is positioned above the anchor.
-  above
+  above,
+
+  /// Use above if the top of the child is larger than half the MediaQuery.of(context).size.height of the screen, and
+  /// under if it is smaller.
+  all
 }
 
 /// Signature for the callback invoked when a [PullDownButton] is dismissed
@@ -30,23 +34,23 @@ typedef PullDownMenuCanceled = void Function();
 ///
 /// Used by [PullDownButton.itemBuilder].
 typedef PullDownMenuItemBuilder = List<PullDownMenuEntry> Function(
-  BuildContext context,
-);
+    BuildContext context,
+    );
 
 /// Signature used by [PullDownButton] to build button widget.
 ///
 /// Used by [PullDownButton.buttonBuilder].
 typedef PullDownMenuButtonBuilder = Widget Function(
-  BuildContext context,
-  void Function() showMenu,
-);
+    BuildContext context,
+    void Function() showMenu,
+    );
 
 /// Displays a pull-down menu and animates button to lower opacity when pressed.
-@immutable
+// @immutable
 class PullDownButton extends StatefulWidget {
   /// Creates a button that shows a pull-down menu.
-  const PullDownButton({
-    super.key,
+  PullDownButton({
+    required this.key,
     required this.itemBuilder,
     required this.buttonBuilder,
     this.onCanceled,
@@ -100,6 +104,8 @@ class PullDownButton extends StatefulWidget {
   /// [PullDownButtonThemeDefaults.backgroundColor] is used.
   final Color? backgroundColor;
 
+  final GlobalKey key;
+
   /// The width of pull-down menu.
   ///
   /// If this property is null then [PullDownButtonTheme.widthConfiguration]
@@ -124,8 +130,7 @@ class _PullDownButtonState extends State<PullDownButton> {
 
   Future<void> showButtonMenu() async {
     final button = context.findRenderObject()! as RenderBox;
-    final overlay =
-        Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
+    final overlay = Navigator.of(context).overlay!.context.findRenderObject()! as RenderBox;
     final offset = widget.offset;
 
     final items = widget.itemBuilder(context);
@@ -141,10 +146,22 @@ class _PullDownButtonState extends State<PullDownButton> {
       Offset.zero & overlay.size,
     );
 
+    var menuPosition = widget.position;
+    if (menuPosition == PullDownMenuPosition.all) {
+      final widgetRect = widget.key.globalPaintBounds;
+      if (widgetRect != null) {
+        if (widgetRect.top < (MediaQuery.of(context).size.height / 2)) {
+          menuPosition = PullDownMenuPosition.under;
+        } else {
+          menuPosition = PullDownMenuPosition.above;
+        }
+      }
+    }
+
     if (items.isNotEmpty) {
       if (items.whereType<SelectablePullDownMenuItem>().isNotEmpty) {
         items.forEachIndexed(
-          (index, item) {
+              (index, item) {
             if (item.represents && item is! SelectablePullDownMenuItem) {
               items[index] = SelectablePullDownMenuItem.convertFrom(
                 item as PullDownMenuItem,
@@ -162,7 +179,8 @@ class _PullDownButtonState extends State<PullDownButton> {
         position: position,
         backgroundColor: widget.backgroundColor,
         buttonSize: button.size,
-        menuPosition: widget.position,
+        // menuPosition: widget.position,
+        menuPosition: menuPosition,
         widthConfiguration: widget.widthConfiguration,
       );
 
@@ -216,13 +234,11 @@ Future<VoidCallback?> _showCupertinoMenu({
 
   // Use this instead of `MaterialLocalizations.of(context)` because
   // [MaterialLocalizations] might be null in some cases.
-  final materialLocalizations =
-      Localizations.of<MaterialLocalizations>(context, MaterialLocalizations);
+  final materialLocalizations = Localizations.of<MaterialLocalizations>(context, MaterialLocalizations);
 
   // Use this instead of `CupertinoLocalizations.of(context)` because
   // [CupertinoLocalizations] might be null in some cases.
-  final cupertinoLocalizations =
-      Localizations.of<CupertinoLocalizations>(context, CupertinoLocalizations);
+  final cupertinoLocalizations = Localizations.of<CupertinoLocalizations>(context, CupertinoLocalizations);
 
   return navigator.push<VoidCallback>(
     PullDownMenuRoute(
@@ -243,4 +259,18 @@ Future<VoidCallback?> _showCupertinoMenu({
       widthConfiguration: widthConfiguration,
     ),
   );
+}
+
+/// GlobalKey extension
+extension GlobalKeyExtension on GlobalKey {
+  Rect? get globalPaintBounds {
+    final renderObject = currentContext?.findRenderObject();
+    final translation = renderObject?.getTransformTo(null).getTranslation();
+    if (translation != null && renderObject?.paintBounds != null) {
+      final offset = Offset(translation.x, translation.y);
+      return renderObject!.paintBounds.shift(offset);
+    } else {
+      return null;
+    }
+  }
 }

@@ -74,7 +74,7 @@ void main() {
 
   testWidgets('Passing no PullDownButtonTheme returns defaults',
       (tester) async {
-    final Key pullDownButton = UniqueKey();
+    final pullDownButton = GlobalKey();
     final Key pullDownApp = UniqueKey();
     final Key pullDownItem = UniqueKey();
 
@@ -140,7 +140,7 @@ void main() {
 
   testWidgets('PullDownButton uses values from PullDownButtonTheme',
       (tester) async {
-    final Key pullDownButton = UniqueKey();
+    final pullDownButton = GlobalKey();
     final Key pullDownApp = UniqueKey();
     final Key pullDownItem = UniqueKey();
 
@@ -204,7 +204,7 @@ void main() {
 
   testWidgets('PullDownButton uses values from PullDownButtonInheritedTheme',
       (tester) async {
-    final Key pullDownButton = UniqueKey();
+    final pullDownButton = GlobalKey();
     final Key pullDownApp = UniqueKey();
     final Key pullDownItem = UniqueKey();
     final Key pullDownDivider = UniqueKey();
@@ -263,7 +263,7 @@ void main() {
   testWidgets(
       'PullDownButton uses widgets properties instead of values from '
       'PullDownButtonTheme', (tester) async {
-    final Key pullDownButton = UniqueKey();
+    final pullDownButton = GlobalKey();
     final Key pullDownApp = UniqueKey();
     final Key pullDownItem = UniqueKey();
 

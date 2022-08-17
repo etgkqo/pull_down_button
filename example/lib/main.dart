@@ -94,6 +94,7 @@ class PullDownButtonPositionUnder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => PullDownButton(
+    key: GlobalKey(),
         itemBuilder: (context) => [
           const PullDownMenuTitle(title: Text('Pull-Down menu')),
           const PullDownMenuDivider(),
